@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhisperLedger Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f1f5f9; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .gradient-text { background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold gradient-text">WhisperLedger Admin</h1>
+                <p class="text-slate-400 mt-1">Manage users, broadcasts, and support tickets</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <!-- Navigation Tabs -->
+                <div class="bg-slate-800/80 p-1 rounded-2xl border border-slate-700/60 flex">
+                    <button id="tabNotificationsBtn" class="px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 bg-indigo-600 text-white transition-all cursor-pointer">
+                        <i data-lucide="bell" class="w-4 h-4"></i> Notifications
+                    </button>
+                    <button id="tabSupportBtn" class="px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-all cursor-pointer">
+                        <i data-lucide="life-buoy" class="w-4 h-4"></i> Support Portal
+                        <span id="unresolvedSupportBadge" class="hidden bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+                </div>
+                <span id="statusIndicator" class="flex items-center gap-2 text-sm text-slate-500">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span> Not Connected
+                </span>
+            </div>
+        </header>
+
+        <!-- ================= NOTIFICATIONS TAB CONTENT ================= -->
+        <div id="notificationsTabContent" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: User List & Broadcast History Trails -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- User List -->
+                <div class="glass rounded-3xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold flex items-center gap-2">
+                            <i data-lucide="users" class="w-5 h-5"></i> Registered Users
+                        </h2>
+                        <span id="userCount" class="bg-slate-800 px-3 py-1 rounded-full text-sm">0 Users</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-slate-500 text-sm border-b border-slate-800">
+                                    <th class="pb-4 font-medium w-12 text-center">
+                                        <input id="selectAllCheckbox" type="checkbox" class="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                                    </th>
+                                    <th class="pb-4 font-medium">NAME</th>
+                                    <th class="pb-4 font-medium">EMAIL</th>
+                                    <th class="pb-4 font-medium text-center">PUSH TOKEN</th>
+                                    <th class="pb-4 font-medium text-right">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTableBody">
+                                <!-- Users injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Broadcast History Trails Card -->
+                <div class="glass rounded-3xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold flex items-center gap-2">
+                            <i data-lucide="history" class="w-5 h-5 text-indigo-400"></i> Broadcast History Trails
+                        </h2>
+                        <div class="flex items-center gap-3">
+                            <span id="trailCount" class="bg-slate-800 px-3 py-1 rounded-full text-xs text-slate-400">0 Broadcasts</span>
+                            <button id="clearHistoryBtn" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear Logs
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-80">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-slate-500 text-sm border-b border-slate-800">
+                                    <th class="pb-4 font-medium">SENT AT</th>
+                                    <th class="pb-4 font-medium text-center">CHANNEL</th>
+                                    <th class="pb-4 font-medium">TITLE</th>
+                                    <th class="pb-4 font-medium">MESSAGE</th>
+                                    <th class="pb-4 font-medium text-right">RECIPIENTS</th>
+                                    <th class="pb-4 font-medium text-right pr-2">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trailTableBody">
+                                <tr class="text-slate-600 text-sm">
+                                    <td colspan="5" class="py-8 text-center">No broadcast history logged yet.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Composer -->
+            <div class="glass rounded-3xl p-6 h-fit sticky top-8">
+                <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                    <i data-lucide="send" class="w-5 h-5"></i> Message Composer
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">SEND CHANNEL</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button id="chanPush" class="flex flex-col items-center justify-center py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-400 font-medium transition-all text-xs gap-1.5 cursor-pointer">
+                                <i data-lucide="bell" class="w-4 h-4"></i> Push
+                            </button>
+                            <button id="chanWa" class="flex flex-col items-center justify-center py-2.5 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 font-medium transition-all text-xs gap-1.5 cursor-pointer">
+                                <i data-lucide="message-square" class="w-4 h-4"></i> WhatsApp
+                            </button>
+                            <button id="chanSms" class="flex flex-col items-center justify-center py-2.5 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 font-medium transition-all text-xs gap-1.5 cursor-pointer">
+                                <i data-lucide="smartphone" class="w-4 h-4"></i> SMS
+                            </button>
+                            <button id="chanMail" class="flex flex-col items-center justify-center py-2.5 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 font-medium transition-all text-xs gap-1.5 cursor-pointer">
+                                <i data-lucide="mail" class="w-4 h-4"></i> Email
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label id="recipientLabel" class="block text-sm font-medium text-slate-400 mb-1">RECIPIENTS (READ ONLY)</label>
+                        <input id="targetUser" type="text" readonly placeholder="Select a user from the list" 
+                               class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">TITLE / SUBJECT</label>
+                        <input id="notifTitle" type="text" placeholder="e.g. Budget Alert" 
+                               class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">MESSAGE BODY</label>
+                        <textarea id="notifBody" rows="4" placeholder="Type your message here..." 
+                                  class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">DELIVERY TIMING</label>
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <button id="timeImmediate" type="button" class="py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-400 font-medium transition-all text-xs cursor-pointer">
+                                Send Immediately
+                            </button>
+                            <button id="timeScheduled" type="button" class="py-2.5 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 font-medium transition-all text-xs cursor-pointer">
+                                Schedule for Later
+                            </button>
+                        </div>
+                        <div id="scheduleTimeWrapper" class="hidden transition-all duration-300">
+                            <input type="datetime-local" id="scheduleDateTime" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-white">
+                        </div>
+                    </div>
+                    <button id="sendBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed py-4 rounded-xl font-bold transition-all mt-4 flex items-center justify-center gap-2 cursor-pointer">
+                        Broadcast Notification
+                    </button>
+                    <div id="queueSection" class="hidden pt-4 border-t border-slate-800 mt-4">
+                        <label class="block text-xs font-semibold text-indigo-400 mb-2 tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 animate-pulse"></i> PENDING SCHEDULED BROADCASTS
+                        </label>
+                        <div id="queueList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            <!-- Injected scheduled items -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SUPPORT TAB CONTENT ================= -->
+        <div id="supportTabContent" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Support Cases List -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass rounded-3xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold flex items-center gap-2">
+                            <i data-lucide="inbox" class="w-5 h-5 text-indigo-400"></i> Support Tickets & Feedbacks
+                        </h2>
+                        <span id="supportCount" class="bg-slate-800 px-3 py-1 rounded-full text-sm">0 Tickets</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-slate-500 text-sm border-b border-slate-800">
+                                    <th class="pb-4 font-medium">TICKET ID</th>
+                                    <th class="pb-4 font-medium">USER</th>
+                                    <th class="pb-4 font-medium">SUBJECT</th>
+                                    <th class="pb-4 font-medium text-center">STATUS</th>
+                                    <th class="pb-4 font-medium text-right pr-2">DATE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supportTableBody">
+                                <tr class="text-slate-600 text-sm">
+                                    <td colspan="5" class="py-8 text-center">No support tickets found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Selected Ticket Details & Reply Box -->
+            <div class="glass rounded-3xl p-6 h-fit sticky top-8">
+                <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                    <i data-lucide="life-buoy" class="w-5 h-5 text-indigo-400"></i> Ticket Details
+                </h2>
+                
+                <div id="noTicketSelected" class="text-center py-12 text-slate-500">
+                    <i data-lucide="mail-open" class="w-12 h-12 mx-auto mb-4 opacity-30"></i>
+                    Select a support ticket from the list to view and reply directly.
+                </div>
+
+                <div id="ticketDetailPanel" class="hidden space-y-5">
+                    <div class="bg-slate-800/40 p-4 rounded-2xl border border-slate-700/50 space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">TICKET ID</span>
+                                <p id="detCaseId" class="text-sm font-semibold text-slate-200">#CASE123</p>
+                            </div>
+                            <span id="detStatusBadge" class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-xl text-xs font-semibold">Received</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">SENDER</span>
+                            <p id="detSenderName" class="text-sm font-medium text-slate-200">Aditya</p>
+                            <p id="detSenderEmail" class="text-xs text-slate-400">aditya@example.com</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">SUBJECT</span>
+                            <p id="detSubject" class="text-sm font-semibold text-slate-200">Issue with SMS parser</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">USER MESSAGE / DESCRIPTION</span>
+                            <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 mt-1 max-h-48 overflow-y-auto">
+                                <p id="detMessage" class="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">User message details here...</p>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">CREATED AT</span>
+                            <p id="detDate" class="text-xs text-slate-400">May 23, 2026, 1:14 PM</p>
+                        </div>
+                    </div>
+
+                    <!-- History / Logs of previous responses if any -->
+                    <div id="previousRepliesWrapper" class="hidden space-y-2">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">PREVIOUS REPLIES</span>
+                        <div id="previousRepliesList" class="space-y-2 max-h-36 overflow-y-auto pr-1">
+                            <!-- Injected replies -->
+                        </div>
+                    </div>
+
+                    <!-- Reply Editor -->
+                    <div class="space-y-3">
+                        <label class="block text-sm font-semibold text-slate-300">REPLY DIRECTLY VIA EMAIL</label>
+                        <textarea id="replyMessage" rows="5" placeholder="Write your professional response here... The user will receive this as an email instantly." 
+                                  class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-100"></textarea>
+                        
+                        <div class="flex gap-2">
+                            <button id="replyBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                <i data-lucide="corner-up-left" class="w-4 h-4"></i> Send Reply
+                            </button>
+                            <button id="markResolvedBtn" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 border border-slate-700/80 px-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer" title="Mark as Resolved">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, serverTimestamp, query, orderBy, limit, getDocs, deleteDoc, writeBatch, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyWPFvO_MDqJbRdMjIv0WUJP4wO93dFnA",
+            authDomain: "whisperledger-94715.firebaseapp.com",
+            projectId: "whisperledger-94715",
+            storageBucket: "whisperledger-94715.firebasestorage.app",
+            messagingSenderId: "1064792050841",
+            appId: "1:1064792050841:web:9e30d27d9f6aa2e4fe3c08"
+        };
+
+        // UI Tabs Elements
+        const tabNotificationsBtn = document.getElementById('tabNotificationsBtn');
+        const tabSupportBtn = document.getElementById('tabSupportBtn');
+        const notificationsTabContent = document.getElementById('notificationsTabContent');
+        const supportTabContent = document.getElementById('supportTabContent');
+        const unresolvedSupportBadge = document.getElementById('unresolvedSupportBadge');
+
+        // UI Elements
+        const userTable = document.getElementById('userTableBody');
+        const userCount = document.getElementById('userCount');
+        const targetInput = document.getElementById('targetUser');
+        const sendBtn = document.getElementById('sendBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+
+        const chanPush = document.getElementById('chanPush');
+        const chanWa = document.getElementById('chanWa');
+        const chanSms = document.getElementById('chanSms');
+        const chanMail = document.getElementById('chanMail');
+        const recipientLabel = document.getElementById('recipientLabel');
+
+        const timeImmediate = document.getElementById('timeImmediate');
+        const timeScheduled = document.getElementById('timeScheduled');
+        const scheduleTimeWrapper = document.getElementById('scheduleTimeWrapper');
+        const scheduleDateTime = document.getElementById('scheduleDateTime');
+        const queueSection = document.getElementById('queueSection');
+        const queueList = document.getElementById('queueList');
+        const trailTableBody = document.getElementById('trailTableBody');
+        const trailCount = document.getElementById('trailCount');
+
+        // Support elements
+        const supportTableBody = document.getElementById('supportTableBody');
+        const supportCount = document.getElementById('supportCount');
+        const noTicketSelected = document.getElementById('noTicketSelected');
+        const ticketDetailPanel = document.getElementById('ticketDetailPanel');
+        const detCaseId = document.getElementById('detCaseId');
+        const detStatusBadge = document.getElementById('detStatusBadge');
+        const detSenderName = document.getElementById('detSenderName');
+        const detSenderEmail = document.getElementById('detSenderEmail');
+        const detSubject = document.getElementById('detSubject');
+        const detMessage = document.getElementById('detMessage');
+        const detDate = document.getElementById('detDate');
+        const previousRepliesWrapper = document.getElementById('previousRepliesWrapper');
+        const previousRepliesList = document.getElementById('previousRepliesList');
+        const replyMessage = document.getElementById('replyMessage');
+        const replyBtn = document.getElementById('replyBtn');
+        const markResolvedBtn = document.getElementById('markResolvedBtn');
+
+        let db;
+        let selectedUser = null;
+        let selectedToken = "";
+        let activeChannel = "push";
+        let allUsers = [];
+        let selectedUserIds = new Set();
+
+        let selectedTiming = "immediate";
+        let scheduledQueue = [];
+
+        // Support State
+        let allSupportTickets = [];
+        let selectedTicket = null;
+
+        // --- TAB NAVIGATION SYSTEM ---
+        function switchTab(activeTab) {
+            if (activeTab === "notifications") {
+                tabNotificationsBtn.className = "px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 bg-indigo-600 text-white transition-all cursor-pointer";
+                tabSupportBtn.className = "px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-all cursor-pointer";
+                notificationsTabContent.classList.remove('hidden');
+                supportTabContent.classList.add('hidden');
+            } else {
+                tabNotificationsBtn.className = "px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-all cursor-pointer";
+                tabSupportBtn.className = "px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 bg-indigo-600 text-white transition-all cursor-pointer";
+                notificationsTabContent.classList.add('hidden');
+                supportTabContent.classList.remove('hidden');
+            }
+        }
+
+        tabNotificationsBtn.onclick = () => switchTab("notifications");
+        tabSupportBtn.onclick = () => switchTab("support");
+
+        // --- TIMING / CHANNELS ---
+        function setTiming(timing) {
+            selectedTiming = timing;
+            if (timing === "immediate") {
+                timeImmediate.className = "py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-400 font-medium transition-all text-xs cursor-pointer";
+                timeScheduled.className = "py-2.5 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 font-medium transition-all text-xs cursor-pointer";
+                scheduleTimeWrapper.classList.add('hidden');
+            } else {
+                timeImmediate.className = "py-2.5 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 font-medium transition-all text-xs cursor-pointer";
+                timeScheduled.className = "py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-400 font-medium transition-all text-xs cursor-pointer";
+                scheduleTimeWrapper.classList.remove('hidden');
+                
+                const oneHourLater = new Date(Date.now() + 60 * 60 * 1000);
+                const offset = oneHourLater.getTimezoneOffset();
+                const localISOTime = new Date(oneHourLater.getTime() - (offset*60*1000)).toISOString().slice(0, 16);
+                scheduleDateTime.value = localISOTime;
+            }
+        }
+
+        timeImmediate.onclick = () => setTiming("immediate");
+        timeScheduled.onclick = () => setTiming("scheduled");
+
+        function renderQueue() {
+            if (scheduledQueue.length === 0) {
+                queueSection.classList.add('hidden');
+                return;
+            }
+            queueSection.classList.remove('hidden');
+            queueList.innerHTML = '';
+            
+            scheduledQueue.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-800/60 border border-slate-800/80 rounded-lg p-2.5 flex items-center justify-between gap-2";
+                const timeStr = new Date(item.time).toLocaleString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
+                
+                div.innerHTML = `
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs font-semibold text-slate-300 truncate">${item.title}</span>
+                        <span class="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
+                            <i data-lucide="clock" class="w-3 h-3 text-slate-500"></i> ${timeStr}
+                        </span>
+                    </div>
+                    <button class="cancel-scheduled-btn text-xs text-rose-400 hover:text-rose-300 font-medium hover:bg-rose-500/10 px-2 py-1 rounded transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                `;
+                
+                div.querySelector('.cancel-scheduled-btn').onclick = () => {
+                    clearTimeout(item.timeoutId);
+                    scheduledQueue.splice(index, 1);
+                    renderQueue();
+                };
+                queueList.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        function updateRecipientDisplay() {
+            const selectedUsers = allUsers.filter(u => selectedUserIds.has(u.uid));
+            
+            if (activeChannel === "push") {
+                if (selectedUsers.length === 0) {
+                    targetInput.value = "";
+                    targetInput.placeholder = "Select users from the list";
+                } else if (selectedUsers.length === 1) {
+                    targetInput.value = selectedUsers[0].name || selectedUsers[0].email;
+                } else {
+                    targetInput.value = `${selectedUsers.length} Users Selected (Broadcast)`;
+                }
+            } else if (activeChannel === "email") {
+                if (selectedUsers.length === 0) {
+                    targetInput.value = "";
+                    targetInput.placeholder = "Enter email address";
+                } else if (selectedUsers.length === 1) {
+                    targetInput.value = selectedUsers[0].email;
+                } else {
+                    targetInput.value = selectedUsers.map(u => u.email).join(", ");
+                }
+            } else {
+                if (selectedUsers.length === 0) {
+                    targetInput.value = "";
+                    targetInput.placeholder = "Enter phone number (e.g., +919876543210)";
+                } else if (selectedUsers.length === 1) {
+                    targetInput.value = selectedUsers[0].phoneNumber || "";
+                } else {
+                    targetInput.value = selectedUsers.map(u => u.phoneNumber || "").filter(p => p !== "").join(", ");
+                }
+            }
+        }
+
+        function setChannel(channel) {
+            activeChannel = channel;
+            [chanPush, chanWa, chanSms, chanMail].forEach(btn => {
+                btn.className = "flex flex-col items-center justify-center py-2.5 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 font-medium transition-all text-xs gap-1.5 cursor-pointer";
+            });
+
+            if (channel === "push") {
+                chanPush.className = "flex flex-col items-center justify-center py-2.5 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-400 font-medium transition-all text-xs gap-1.5 cursor-pointer";
+                recipientLabel.innerText = "RECIPIENTS (READ ONLY)";
+                targetInput.readOnly = true;
+                targetInput.placeholder = "Select users from the list";
+                updateRecipientDisplay();
+                sendBtn.className = "w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed py-4 rounded-xl font-bold transition-all mt-4 flex items-center justify-center gap-2 cursor-pointer";
+                sendBtn.innerText = "Broadcast Push Notification";
+            } else if (channel === "whatsapp") {
+                chanWa.className = "flex flex-col items-center justify-center py-2.5 rounded-xl border border-green-500 bg-green-600/20 text-green-400 font-medium transition-all text-xs gap-1.5 cursor-pointer";
+                recipientLabel.innerText = "RECIPIENT PHONE NUMBER";
+                targetInput.readOnly = false;
+                targetInput.placeholder = "Enter phone number (e.g., +919876543210)";
+                updateRecipientDisplay();
+                sendBtn.className = "w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed py-4 rounded-xl font-bold transition-all mt-4 flex items-center justify-center gap-2 cursor-pointer";
+                sendBtn.innerText = "Send via WhatsApp";
+            } else if (channel === "sms") {
+                chanSms.className = "flex flex-col items-center justify-center py-2.5 rounded-xl border border-amber-500 bg-amber-600/20 text-amber-400 font-medium transition-all text-xs gap-1.5 cursor-pointer";
+                recipientLabel.innerText = "RECIPIENT PHONE NUMBER";
+                targetInput.readOnly = false;
+                targetInput.placeholder = "Enter phone number (e.g., +919876543210)";
+                updateRecipientDisplay();
+                sendBtn.className = "w-full bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed py-4 rounded-xl font-bold transition-all mt-4 flex items-center justify-center gap-2 cursor-pointer";
+                sendBtn.innerText = "Send via SMS";
+            } else if (channel === "email") {
+                chanMail.className = "flex flex-col items-center justify-center py-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-blue-400 font-medium transition-all text-xs gap-1.5 cursor-pointer";
+                recipientLabel.innerText = "EMAIL ADDRESSES";
+                targetInput.readOnly = false;
+                targetInput.placeholder = "Enter email address (e.g., name@example.com)";
+                updateRecipientDisplay();
+                sendBtn.className = "w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed py-4 rounded-xl font-bold transition-all mt-4 flex items-center justify-center gap-2 cursor-pointer";
+                sendBtn.innerText = "Send via Email";
+            }
+        }
+
+        chanPush.onclick = () => setChannel("push");
+        chanWa.onclick = () => setChannel("whatsapp");
+        chanSms.onclick = () => setChannel("sms");
+        chanMail.onclick = () => setChannel("email");
+
+        // --- USER LIST RENDER ---
+        function renderTable() {
+            userTable.innerHTML = '';
+            
+            allUsers.forEach((data) => {
+                const isSelected = selectedUserIds.has(data.uid);
+                const tr = document.createElement('tr');
+                
+                if (isSelected) {
+                    tr.className = "border-b border-slate-800 bg-indigo-600/15 hover:bg-indigo-600/20 transition-all cursor-pointer border-l-4 border-l-indigo-500 text-slate-100 font-medium";
+                } else {
+                    tr.className = "border-b border-slate-800/50 hover:bg-slate-800/30 transition-all cursor-pointer border-l-4 border-l-transparent text-slate-300";
+                }
+                
+                const isChecked = isSelected ? "checked" : "";
+                
+                tr.onclick = (e) => {
+                    if (e.target.type === "checkbox" || e.target.classList.contains('select-row-btn')) return;
+                    
+                    if (selectedUserIds.has(data.uid)) {
+                        selectedUserIds.delete(data.uid);
+                    } else {
+                        selectedUserIds.add(data.uid);
+                    }
+                    renderTable();
+                    updateRecipientDisplay();
+                };
+
+                tr.innerHTML = `
+                    <td class="py-4 text-center">
+                        <input type="checkbox" class="user-select-checkbox rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4 accent-indigo-500" data-uid="${data.uid}" ${isChecked}>
+                    </td>
+                    <td class="py-4 font-semibold">${data.name || 'User'}</td>
+                    <td class="py-4 text-slate-400 text-sm">${data.email}</td>
+                    <td class="py-4 text-center">
+                        ${data.pushToken ? '<span class="text-green-500 font-semibold flex items-center justify-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Available</span>' : '<span class="text-slate-600">Missing</span>'}
+                    </td>
+                    <td class="py-4 text-right">
+                        <button class="text-indigo-400 hover:text-indigo-300 text-sm font-semibold select-row-btn hover:underline px-3 py-1 rounded-lg hover:bg-slate-800/50 transition-colors">Select Only</button>
+                    </td>
+                `;
+                
+                const checkbox = tr.querySelector('.user-select-checkbox');
+                checkbox.onchange = (e) => {
+                    if (e.target.checked) {
+                        selectedUserIds.add(data.uid);
+                    } else {
+                        selectedUserIds.delete(data.uid);
+                    }
+                    const selectAllCb = document.getElementById('selectAllCheckbox');
+                    selectAllCb.checked = allUsers.length > 0 && selectedUserIds.size === allUsers.length;
+                    
+                    renderTable();
+                    updateRecipientDisplay();
+                };
+
+                const selectBtn = tr.querySelector('.select-row-btn');
+                selectBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    selectedUserIds.clear();
+                    selectedUserIds.add(data.uid);
+                    
+                    const selectAllCb = document.getElementById('selectAllCheckbox');
+                    selectAllCb.checked = allUsers.length > 0 && selectedUserIds.size === allUsers.length;
+                    
+                    renderTable();
+                    updateRecipientDisplay();
+                };
+
+                userTable.appendChild(tr);
+            });
+        }
+
+        // --- SUPPORT CASES PORTAL RENDER ---
+        function renderSupportTable() {
+            supportTableBody.innerHTML = '';
+            
+            if (allSupportTickets.length === 0) {
+                supportTableBody.innerHTML = `
+                    <tr class="text-slate-600 text-sm">
+                        <td colspan="5" class="py-8 text-center">No support tickets or feedbacks logged yet.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            allSupportTickets.forEach((ticket) => {
+                const tr = document.createElement('tr');
+                const isSelected = selectedTicket && selectedTicket.id === ticket.id;
+                
+                if (isSelected) {
+                    tr.className = "border-b border-slate-800 bg-indigo-600/15 hover:bg-indigo-600/20 transition-all cursor-pointer border-l-4 border-l-indigo-500 text-slate-100 font-medium text-sm";
+                } else {
+                    tr.className = "border-b border-slate-800/50 hover:bg-slate-800/30 transition-all cursor-pointer border-l-4 border-l-transparent text-slate-300 text-sm";
+                }
+
+                let statusBadge = '';
+                if (ticket.status === 'resolved') {
+                    statusBadge = '<span class="bg-emerald-950/80 text-emerald-400 border border-emerald-900/50 px-2 py-0.5 rounded-full text-[10px] font-semibold">Resolved</span>';
+                } else if (ticket.status === 'replied') {
+                    statusBadge = '<span class="bg-blue-950/80 text-blue-400 border border-blue-900/50 px-2 py-0.5 rounded-full text-[10px] font-semibold">Replied</span>';
+                } else {
+                    statusBadge = '<span class="bg-amber-950/80 text-amber-400 border border-amber-900/50 px-2 py-0.5 rounded-full text-[10px] font-semibold">Received</span>';
+                }
+
+                const createdDate = ticket.createdAt ? new Date(ticket.createdAt.seconds * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now';
+
+                tr.onclick = () => {
+                    selectSupportTicket(ticket);
+                };
+
+                tr.innerHTML = `
+                    <td class="py-4 font-mono font-semibold text-slate-400 text-xs">#${ticket.id.slice(0, 6)}...</td>
+                    <td class="py-4">
+                        <div class="font-semibold text-slate-200">${ticket.userName || 'Guest'}</div>
+                        <div class="text-[11px] text-slate-500">${ticket.userEmail || 'No email'}</div>
+                    </td>
+                    <td class="py-4 max-w-[150px] truncate text-slate-300">${ticket.subject || 'No Subject'}</td>
+                    <td class="py-4 text-center">${statusBadge}</td>
+                    <td class="py-4 text-right text-slate-500 text-xs pr-2">${createdDate}</td>
+                `;
+
+                supportTableBody.appendChild(tr);
+            });
+        }
+
+        function selectSupportTicket(ticket) {
+            selectedTicket = ticket;
+            renderSupportTable();
+
+            noTicketSelected.classList.add('hidden');
+            ticketDetailPanel.classList.remove('hidden');
+
+            detCaseId.innerText = `#${ticket.id}`;
+            detSenderName.innerText = ticket.userName || 'Guest User';
+            detSenderEmail.innerText = ticket.userEmail || 'No Email captured';
+            detSubject.innerText = ticket.subject || 'WhisperLedger Support Request';
+            let msgText = ticket.message || ticket.description || ticket.body || ticket.text || ticket.msg || ticket.content || ticket.details || ticket.feedback || ticket.issue || '';
+            if (!msgText) {
+                // Check all other string properties (excluding standard metadata keys) to catch custom fields
+                for (const key in ticket) {
+                    if (typeof ticket[key] === 'string' && 
+                        !['id', 'userId', 'userEmail', 'userName', 'subject', 'status', 'source'].includes(key)) {
+                        msgText = ticket[key];
+                        break;
+                    }
+                }
+            }
+            detMessage.innerText = msgText || (ticket.source === 'app_mailto' ? '📬 [Mail Redirect Case] The user was redirected to their default email client to compose this message. Please check your support inbox at whisperledger.support@gmail.com' : 'No message details provided.');
+            
+            const createdDate = ticket.createdAt ? new Date(ticket.createdAt.seconds * 1000).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Pending...';
+            detDate.innerText = createdDate;
+
+            // Render status badge
+            if (ticket.status === 'resolved') {
+                detStatusBadge.className = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-xl text-xs font-semibold";
+                detStatusBadge.innerText = "Resolved";
+            } else if (ticket.status === 'replied') {
+                detStatusBadge.className = "bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-xl text-xs font-semibold";
+                detStatusBadge.innerText = "Replied";
+            } else {
+                detStatusBadge.className = "bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-xl text-xs font-semibold";
+                detStatusBadge.innerText = "Received";
+            }
+
+            // Render replies history if any
+            if (Array.isArray(ticket.replies) && ticket.replies.length > 0) {
+                previousRepliesWrapper.classList.remove('hidden');
+                previousRepliesList.innerHTML = '';
+                ticket.replies.forEach((rep) => {
+                    const d = document.createElement('div');
+                    d.className = "bg-slate-800/80 border border-slate-700/40 rounded-xl p-3 space-y-1";
+                    
+                    const timeStr = rep.sentAt ? new Date(rep.sentAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                    
+                    d.innerHTML = `
+                        <div class="flex justify-between items-center text-[10px] text-slate-500">
+                            <span class="font-bold text-indigo-400 uppercase">Support Agent</span>
+                            <span>${timeStr}</span>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed">${rep.message.replace(/\n/g, '<br/>')}</p>
+                    `;
+                    previousRepliesList.appendChild(d);
+                });
+            } else {
+                previousRepliesWrapper.classList.add('hidden');
+            }
+
+            replyMessage.value = '';
+            replyMessage.focus();
+        }
+
+        // --- SUBMIT REPLY ---
+        replyBtn.onclick = async () => {
+            if (!selectedTicket) return;
+            const message = replyMessage.value.trim();
+            if (!message) {
+                alert("Please type a response first.");
+                return;
+            }
+
+            replyBtn.disabled = true;
+            replyBtn.innerText = "Sending reply email...";
+
+            try {
+                // 1. Add email request into Trigger Email extension mail collection
+                if (selectedTicket.userEmail) {
+                    await setDoc(doc(collection(db, "mail")), {
+                        to: [selectedTicket.userEmail],
+                        replyTo: "whisperledger.support@gmail.com",
+                        message: {
+                            subject: `Re: WhisperLedger Support Request [Ticket #${selectedTicket.id}]`,
+                            text: message + "\n\n---\nWhisperLedger Support\nwhisperledger.support@gmail.com"
+                        }
+                    });
+                }
+
+                // 2. Add an in-app notification to the user so they get it directly inside the app
+                if (selectedTicket.userId) {
+                    await setDoc(doc(db, `users/${selectedTicket.userId}/notifications/support_reply_${Date.now()}`), {
+                        title: "Support reply received",
+                        body: message.length > 60 ? message.slice(0, 60) + "..." : message,
+                        notificationType: "support_reply",
+                        read: false,
+                        data: { caseId: selectedTicket.id },
+                        createdAt: serverTimestamp()
+                    });
+                }
+
+                // 3. Update the ticket itself in Firestore: log reply and status
+                const ticketRef = doc(db, "support_cases", selectedTicket.id);
+                const replyObj = {
+                    message: message,
+                    sentAt: Date.now()
+                };
+                
+                await updateDoc(ticketRef, {
+                    status: "replied",
+                    replies: arrayUnion(replyObj)
+                });
+
+                alert("Reply sent successfully! Email dispatched and logged.");
+                
+                // Refresh local state panel
+                const updatedTicket = { ...selectedTicket };
+                if (!updatedTicket.replies) updatedTicket.replies = [];
+                updatedTicket.replies.push(replyObj);
+                updatedTicket.status = "replied";
+                selectSupportTicket(updatedTicket);
+
+            } catch (e) {
+                alert("Failed to send reply: " + e.message);
+            } finally {
+                replyBtn.disabled = false;
+                replyBtn.innerHTML = '<i data-lucide="corner-up-left" class="w-4 h-4"></i> Send Reply';
+                lucide.createIcons();
+            }
+        };
+
+        // --- MARK RESOLVED ---
+        markResolvedBtn.onclick = async () => {
+            if (!selectedTicket) return;
+            if (confirm("Are you sure you want to mark this support ticket as resolved?")) {
+                try {
+                    const ticketRef = doc(db, "support_cases", selectedTicket.id);
+                    await updateDoc(ticketRef, { status: "resolved" });
+                    
+                    const updatedTicket = { ...selectedTicket, status: "resolved" };
+                    selectSupportTicket(updatedTicket);
+                    alert("Ticket marked as Resolved.");
+                } catch (e) {
+                    alert("Failed to resolve ticket: " + e.message);
+                }
+            }
+        };
+
+        // --- FIREBASE INTEGRATION ---
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            
+            statusIndicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Connected to Firebase';
+
+            // Select all checkbox handler
+            const selectAllCb = document.getElementById('selectAllCheckbox');
+            selectAllCb.onchange = (e) => {
+                if (e.target.checked) {
+                    allUsers.forEach(u => selectedUserIds.add(u.uid));
+                } else {
+                    selectedUserIds.clear();
+                }
+                renderTable();
+                updateRecipientDisplay();
+            };
+
+            // Fetch Users
+            onSnapshot(collection(db, "users"), (snapshot) => {
+                allUsers = [];
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    if (!data.uid) {
+                        data.uid = docSnap.id;
+                    }
+                    allUsers.push(data);
+                });
+                
+                userCount.innerText = `${allUsers.length} Users`;
+                
+                const selectAllCb = document.getElementById('selectAllCheckbox');
+                selectAllCb.checked = allUsers.length > 0 && selectedUserIds.size === allUsers.length;
+                
+                renderTable();
+                updateRecipientDisplay();
+            });
+
+            // Fetch Support Tickets in real-time
+            const qSupport = query(collection(db, "support_cases"), orderBy("createdAt", "desc"));
+            onSnapshot(qSupport, (snapshot) => {
+                allSupportTickets = [];
+                let unresolvedCount = 0;
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    data.id = docSnap.id;
+                    allSupportTickets.push(data);
+                    
+                    if (data.status === "received") {
+                        unresolvedCount++;
+                    }
+                });
+
+                supportCount.innerText = `${allSupportTickets.length} Tickets`;
+                
+                // Render badge count next to Tab
+                if (unresolvedCount > 0) {
+                    unresolvedSupportBadge.innerText = unresolvedCount;
+                    unresolvedSupportBadge.classList.remove('hidden');
+                } else {
+                    unresolvedSupportBadge.classList.add('hidden');
+                }
+
+                renderSupportTable();
+                
+                // If the selected ticket was updated, refresh details panel
+                if (selectedTicket) {
+                    const fresh = allSupportTickets.find(t => t.id === selectedTicket.id);
+                    if (fresh) {
+                        // refresh
+                        detStatusBadge.innerText = fresh.status;
+                        if (fresh.status === 'resolved') {
+                            detStatusBadge.className = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-xl text-xs font-semibold";
+                            detStatusBadge.innerText = "Resolved";
+                        } else if (fresh.status === 'replied') {
+                            detStatusBadge.className = "bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-xl text-xs font-semibold";
+                            detStatusBadge.innerText = "Replied";
+                        } else {
+                            detStatusBadge.className = "bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-xl text-xs font-semibold";
+                            detStatusBadge.innerText = "Received";
+                        }
+                    }
+                }
+            });
+
+            // Fetch Broadcast Trails
+            const qTrails = query(collection(db, "broadcast_history"), orderBy("sentAt", "desc"), limit(50));
+            onSnapshot(qTrails, (snapshot) => {
+                trailTableBody.innerHTML = '';
+                trailCount.innerText = `${snapshot.size} Broadcasts`;
+                
+                if (snapshot.empty) {
+                    trailTableBody.innerHTML = `
+                        <tr class="text-slate-600 text-sm">
+                            <td colspan="6" class="py-8 text-center">No broadcast history logged yet.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors text-sm text-slate-300";
+                    
+                    const timeStr = data.sentAt ? new Date(data.sentAt.seconds * 1000).toLocaleString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' }) : 'Pending...';
+                    
+                    let channelBadge = '';
+                    if (data.channel === 'push') {
+                        channelBadge = '<span class="bg-indigo-950/80 text-indigo-400 border border-indigo-900/50 px-2.5 py-0.5 rounded text-[10px] font-semibold tracking-wider">PUSH</span>';
+                    } else if (data.channel === 'whatsapp') {
+                        channelBadge = '<span class="bg-green-950/80 text-green-400 border border-green-900/50 px-2.5 py-0.5 rounded text-[10px] font-semibold tracking-wider">WA</span>';
+                    } else if (data.channel === 'sms') {
+                        channelBadge = '<span class="bg-amber-950/80 text-amber-400 border border-amber-900/50 px-2.5 py-0.5 rounded text-[10px] font-semibold tracking-wider">SMS</span>';
+                    } else {
+                        channelBadge = '<span class="bg-blue-950/80 text-blue-400 border border-blue-900/50 px-2.5 py-0.5 rounded text-[10px] font-semibold tracking-wider">EMAIL</span>';
+                    }
+                    
+                    const recCount = Array.isArray(data.recipients) ? data.recipients.length : 1;
+                    
+                    tr.innerHTML = `
+                        <td class="py-3.5 text-xs text-slate-500">${timeStr}</td>
+                        <td class="py-3.5 text-center">${channelBadge}</td>
+                        <td class="py-3.5 font-semibold text-slate-200 truncate max-w-[120px]">${data.title}</td>
+                        <td class="py-3.5 text-slate-400 truncate max-w-[200px]">${data.body}</td>
+                        <td class="py-3.5 text-right font-medium text-slate-400">${recCount} user(s)</td>
+                        <td class="py-3.5 text-right pr-2">
+                            <button class="delete-individual-btn hover:text-red-400 text-slate-500 hover:bg-slate-800 p-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    const btn = tr.querySelector('.delete-individual-btn');
+                    btn.onclick = async () => {
+                        if (confirm(`Are you sure you want to delete this broadcast trail entry?`)) {
+                            try {
+                                await deleteDoc(doc(db, "broadcast_history", docSnap.id));
+                            } catch (e) {
+                                alert("Failed to delete log: " + e.message);
+                            }
+                        }
+                    };
+                    
+                    trailTableBody.appendChild(tr);
+                });
+                lucide.createIcons();
+            });
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+        }
+
+        // --- BROADCAST NOTIFICATION SUBMIT ---
+        sendBtn.onclick = async () => {
+            const title = document.getElementById('notifTitle').value.trim();
+            const body = document.getElementById('notifBody').value.trim();
+            const recipientVal = targetInput.value.trim();
+            const selectedUsers = allUsers.filter(u => selectedUserIds.has(u.uid));
+
+            if (!title || !body) {
+                alert("Please fill in both title and message.");
+                return;
+            }
+
+            if (activeChannel === "push") {
+                if (selectedUsers.length === 0) {
+                    alert("Please select at least one user from the list.");
+                    return;
+                }
+
+                const validUsers = selectedUsers.filter(u => u.pushToken && (u.pushToken.startsWith('ExponentPushToken') || u.pushToken.startsWith('ExpoPushToken')));
+
+                if (selectedTiming === "scheduled") {
+                    const rawTime = document.getElementById('scheduleDateTime').value;
+                    if (!rawTime) {
+                        alert("Please select a date and time for the scheduled broadcast.");
+                        return;
+                    }
+                    const fireTime = new Date(rawTime).getTime();
+                    if (isNaN(fireTime)) {
+                        alert("Invalid date and time selected.");
+                        return;
+                    }
+                    if (fireTime <= Date.now()) {
+                        alert("Please choose a time in the future.");
+                        return;
+                    }
+
+                    const delay = fireTime - Date.now();
+                    const notifId = "admin_" + Date.now();
+
+                    const timeoutId = setTimeout(async () => {
+                        try {
+                            const firestoreWrites = selectedUsers.map(u => {
+                                const notifRef = doc(db, `users/${u.uid}/notifications`, notifId);
+                                return setDoc(notifRef, {
+                                    title: title,
+                                    body: body,
+                                    notificationType: "admin_broadcast",
+                                    data: { type: "admin_broadcast" },
+                                    read: false,
+                                    createdAt: Date.now()
+                                });
+                            });
+                            await Promise.all(firestoreWrites);
+
+                            if (validUsers.length > 0) {
+                                const expoTickets = validUsers.map(u => ({
+                                    to: u.pushToken,
+                                    title: title,
+                                    body: body,
+                                    sound: 'default',
+                                    data: { type: 'admin_broadcast' }
+                                }));
+
+                                await fetch('https://exp.host/--/api/v2/push/send', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(expoTickets)
+                                });
+                            }
+
+                            const trailRef = doc(collection(db, "broadcast_history"));
+                            await setDoc(trailRef, {
+                                title: title,
+                                body: body,
+                                channel: activeChannel,
+                                recipients: selectedUsers.map(u => ({ uid: u.uid || "", name: u.name || "User", email: u.email || "no-email@example.com" })),
+                                sentAt: serverTimestamp(),
+                                timing: "scheduled"
+                            });
+
+                            console.log(`[Scheduled Broadcast] Timed broadcast dispatched successfully!`);
+                        } catch (e) {
+                            console.error("[Scheduled Broadcast] Error:", e);
+                        } finally {
+                            scheduledQueue = scheduledQueue.filter(item => item.id !== notifId);
+                            renderQueue();
+                        }
+                    }, delay);
+
+                    scheduledQueue.push({
+                        id: notifId,
+                        title: title,
+                        body: body,
+                        time: fireTime,
+                        timeoutId: timeoutId,
+                        users: selectedUsers
+                    });
+
+                    alert(`Broadcast scheduled successfully for ${new Date(fireTime).toLocaleString()}!`);
+
+                    document.getElementById('notifTitle').value = '';
+                    document.getElementById('notifBody').value = '';
+                    selectedUserIds.clear();
+                    document.getElementById('selectAllCheckbox').checked = false;
+                    setTiming("immediate");
+                    
+                    renderTable();
+                    updateRecipientDisplay();
+                    renderQueue();
+                    return;
+                }
+
+        sendBtn.disabled = true;
+                sendBtn.innerText = "Sending Broadcast...";
+
+                try {
+                    const notifId = "admin_" + Date.now();
+
+                    // Step 1: Always write Firestore in-app notifications for ALL selected users
+                    const firestoreWrites = selectedUsers.map(u => {
+                        const notifRef = doc(db, `users/${u.uid}/notifications`, notifId);
+                        return setDoc(notifRef, {
+                            title: title,
+                            body: body,
+                            notificationType: "admin_broadcast",
+                            data: { type: "admin_broadcast" },
+                            read: false,
+                            createdAt: Date.now()
+                        });
+                    });
+                    await Promise.all(firestoreWrites);
+
+                    // Categorize tokens
+                    const validPushUsers = selectedUsers.filter(u =>
+                        u.pushToken &&
+                        (u.pushToken.startsWith('ExponentPushToken') || u.pushToken.startsWith('ExpoPushToken'))
+                    );
+                    const noPushUsers = selectedUsers.filter(u =>
+                        !u.pushToken || u.pushToken.startsWith('mock_')
+                    );
+
+                    // Send Expo push for users with valid tokens
+                    let pushSentCount = 0;
+                    let pushError = null;
+
+                    if (validPushUsers.length > 0) {
+                        const expoTickets = validPushUsers.map(u => ({
+                            to: u.pushToken,
+                            title: title,
+                            body: body,
+                            sound: 'default',
+                            channelId: 'default',
+                            data: { type: 'admin_broadcast' }
+                        }));
+
+                        try {
+                            const pushRes = await fetch('https://exp.host/--/api/v2/push/send', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify(expoTickets)
+                            });
+
+                            if (pushRes.ok) {
+                                const pushData = await pushRes.json();
+                                if (pushData.data) {
+                                    pushSentCount = pushData.data.filter(t => t.status === 'ok').length;
+                                    const failed = pushData.data.filter(t => t.status === 'error');
+                                    if (failed.length > 0) {
+                                        pushError = failed.map(t => t.details?.error || t.message).join(', ');
+                                    }
+                                } else {
+                                    pushSentCount = validPushUsers.length;
+                                }
+                            } else {
+                                pushError = `Push API error: ${pushRes.status}`;
+                            }
+                        } catch (pushEx) {
+                            pushError = pushEx.message;
+                        }
+                    }
+
+                    // Log broadcast trail
+                    const trailRef = doc(collection(db, "broadcast_history"));
+                    await setDoc(trailRef, {
+                        title: title,
+                        body: body,
+                        channel: activeChannel,
+                        recipients: selectedUsers.map(u => ({ uid: u.uid || "", name: u.name || "User", email: u.email || "no-email@example.com" })),
+                        sentAt: serverTimestamp(),
+                        timing: "immediate",
+                        pushSentCount,
+                        inAppSentCount: selectedUsers.length
+                    });
+
+                    // Clean result message
+                    let resultMsg = '';
+                    if (pushSentCount > 0) {
+                        resultMsg = `✅ Broadcast sent! Push notification delivered to ${pushSentCount} device(s).`;
+                    } else if (validPushUsers.length === 0) {
+                        resultMsg = `✅ In-app notification written. No valid push token found — open the app once to register.`;
+                    } else {
+                        resultMsg = `⚠️ In-app notification written but push delivery failed.`;
+                    }
+                    if (pushError) resultMsg += `\n\nDetails: ${pushError}`;
+
+                    alert(resultMsg);
+
+                    document.getElementById('notifTitle').value = '';
+                    document.getElementById('notifBody').value = '';
+                    selectedUserIds.clear();
+                    document.getElementById('selectAllCheckbox').checked = false;
+
+                    renderTable();
+                    updateRecipientDisplay();
+                } catch (error) {
+                    alert("Failed to send broadcast: " + error.message);
+                } finally {
+                    sendBtn.disabled = false;
+                    sendBtn.innerText = "Broadcast Notification";
+                }
+            } else if (activeChannel === "whatsapp") {
+                if (recipientVal === "") {
+                    alert("Please provide a phone number.");
+                    return;
+                }
+                const firstPhone = recipientVal.split(",")[0].trim();
+                const cleanPhone = firstPhone.replace(/[^+\d]/g, '');
+                const text = encodeURIComponent(`*${title}*\n\n${body}`);
+                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${text}`, '_blank');
+            } else if (activeChannel === "sms") {
+                if (recipientVal === "") {
+                    alert("Please provide a phone number.");
+                    return;
+                }
+                const firstPhone = recipientVal.split(",")[0].trim();
+                const cleanPhone = firstPhone.replace(/[^+\d]/g, '');
+                const text = encodeURIComponent(`${title}\n\n${body}`);
+                window.open(`sms:${cleanPhone}?body=${text}`, '_blank');
+            } else if (activeChannel === "email") {
+                if (recipientVal === "") {
+                    alert("Please provide an email address.");
+                    return;
+                }
+                const subject = encodeURIComponent(title);
+                const text = encodeURIComponent(body);
+                window.open(`mailto:${recipientVal}?subject=${subject}&body=${text}`, '_blank');
+            }
+        };
+
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        clearHistoryBtn.onclick = async () => {
+            if (!confirm("Permanently delete all broadcast logs?")) return;
+            clearHistoryBtn.disabled = true;
+            clearHistoryBtn.innerText = "Clearing...";
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "broadcast_history"));
+                const batch = writeBatch(db);
+                querySnapshot.forEach((docSnap) => batch.delete(docSnap.ref));
+                await batch.commit();
+            } catch (error) {
+                alert("Failed: " + error.message);
+            } finally {
+                clearHistoryBtn.disabled = false;
+                clearHistoryBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear Logs';
+                lucide.createIcons();
+            }
+        };
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
