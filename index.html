@@ -383,6 +383,7 @@
         // Support State
         let allSupportTickets = [];
         let selectedTicket = null;
+        const bootstrapAdminEmails = new Set(["agarwaltanmay401@gmail.com"]);
 
         function esc(value) {
             return String(value ?? "")
@@ -434,7 +435,7 @@
 
                     try {
                         const token = await user.getIdTokenResult(true);
-                        if (token.claims.admin !== true) {
+                        if (token.claims.admin !== true && !bootstrapAdminEmails.has((user.email || "").toLowerCase())) {
                             await signOut(auth);
                             showLoginError("This account is signed in but does not have the Firebase admin claim. Grant admin access from the server, then sign in again.");
                             return;
