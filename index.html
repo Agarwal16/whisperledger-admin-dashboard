@@ -436,7 +436,7 @@
                         const token = await user.getIdTokenResult(true);
                         if (token.claims.admin !== true) {
                             await signOut(auth);
-                            showLoginError("This account is not authorized for admin access.");
+                            showLoginError("This account is signed in but does not have the Firebase admin claim. Grant admin access from the server, then sign in again.");
                             return;
                         }
 
